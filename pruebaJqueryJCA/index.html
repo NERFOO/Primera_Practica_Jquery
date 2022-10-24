@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Incremento salarial oficios empleados</h1>
+
+    <label>Seleccione un oficio</label>
+    <select id="select">
+        <option value=""></option>
+    </select>
+    <br>
+
+    <label>Incremento salarial</label>
+    <input type="text" id="InputIncremento">
+    <br>
+
+    <button id="buttonIncremento">Incrementar salarios</button>
+    <br><br>
+
+    <table border="1" id="tabla">
+        <thead>
+            <tr>
+                <td>Apellido</td>
+                <td>Oficio</td>
+                <td>Salario</td>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+
+
+    <script src="js/jquery-3.6.1.min.js"></script>
+    <script>
+        var url = "https://apiempleadosaction.azurewebsites.net/";
+
+        function mostrarDatos() {
+            var request = "/api/Empleados/GetOficios/oficios/";
+
+            //GET
+            $.ajax({
+                "url": url + request ,
+                "method": "GET" ,
+                "dataType": "json" ,
+                "success": function(data) {
+                    console.log(data);
+                    $.each(data, function(index, oficio) {
+                        var option = $("<option>", { "text": oficio });
+                        $("#select").append(option);
+
+
+                        //PUT
+                        $("#buttonIncremento").click(function() {
+                            console.log("pulsando incremento");
+
+                            var oficio = $(this).prop("selected");
+                            console.log("oficio " + oficio);
+
+                            var incremento = $("#inputIncremento").val();
+                            console.log("incremento " + incremento);
+
+                            var request = "/api/Empleados/IncrementarSalarioOficios/" + oficio + incremento;
+
+                            $("#tabla tbody").text("");
+                            $.ajax({
+                                "url": url + request ,
+                                "type": "PUT" ,
+                                "data": dataJson ,
+                                "contentType": "application/json" ,
+                                "success": function() {
+                                    console.log("Dato modificado");
+                                    mostrarDatos();
+                                }
+                            });
+                        });
+                    });
+                }
+            });
+        }
+        function getSegundo() {
+            //GET
+            var requestFinal = "/api/Empleados/GetEmpleadosOficio/empleadosoficio/" + oficio;
+
+            $.ajax({
+                "url": url + requestFinal ,
+                "method": "GET" ,
+                "dataType": "json" ,
+                "success": function(data) {
+                    console.log("dentro del segundo get");
+                    $.each(data, function(index, oficio) {
+                        var fila = $("<tr>");
+
+                        var id = $("<td>", { "text": oficio.idEmpleado });
+                        var ape = $("<td>", { "text": oficio.apellido });
+                        var ofi = $("<td>", { "text": oficio.oficio });
+                        var sal = $("<td>", { "text": oficio.salario });
+                        var dir = $("<td>", { "text": oficio.director });
+
+                        fila.append(id);
+                        fila.append(ape);
+                        fila.append(ofi);
+                        fila.append(sal);
+                        fila.append(dir);
+
+                        $("#tabla tbody").append(fila);
+                    });
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            mostrarDatos();
+        });
+    </script>
+</body>
+</html>
