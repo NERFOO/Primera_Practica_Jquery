@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body style="padding: 35px;">
+    <h1>Practica 1 de Jquery</h1>
+    <h2>Incremento salarial oficios empleados</h2>
+    <div id="divSelect">
+        <label>Seleccione un oficio</label>
+    </div>
+    <hr/>
+    <label>Incremento salarial</label>
+    <input type="text" id="incremento">
+    <hr/>
+    <div id="divButton">
+
+    </div>
+    <hr>
+
+    <table border="1" id="tabla">
+        <thead>
+            <tr>
+                <th>Apellido</th>
+                <th>Oficio</th>
+                <th>Salario</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script src="js/jquery-3.6.1.min.js"></script>
+    <script>
+        //URL COMUN PARA TODAS LAS PETICIONES
+        var url = "https://apiempleadosaction.azurewebsites.net/";
+        var select = $("<select>");
+        $("#divSelect").append(select);
+
+        //GET OFICIOS
+        function datosSelect() {
+            //OBTENCION DE OFICIOS
+            var request = "/api/Empleados/GetOficios/oficios/";
+
+            //CONSULTA A LA API PARA MOSTRAR LOS DATOS
+            $.ajax({
+                "url": url + request ,
+                "method": "GET" ,
+                "dataType": "json" ,
+                "success": function(data) {
+                    $.each(data, function(index, oficio) {
+                        //CREACION DE OPTION DINAMICAMENTE
+                        var option = $("<option>", { "text": oficio });
+
+                        //AÑADIENDO CADA OPTION AL SELECT DINAMICAMENTE
+                        select.append(option);
+                    });
+                }
+            });
+        }
+
+        //CONSULTA A LA API LS DATOS FILTRADOS Y LOS MUESTRA
+        function mostrarDatos() {
+            //VALOR DEL SELECT (SELECT)
+            var oficio = select.val();
+
+            //OBTENCION DE LOS EMPLEADOS
+            var request = "/api/Empleados/GetEmpleadosOficio/empleadosoficio/" + oficio;
+
+            //CONSULTA A LA API PARA MOSTRAR LOS DATOS DE CADA EMPLEADO
+            $.ajax({
+                "url": url + request ,
+                "method": "GET" ,
+                "dataType": "json" ,
+                "success": function(data) {
+
+                    var html = "";
+
+                    //RECORREMOS TODOS LOS DATOS DE CADA EMPLEADO
+                    $.each(data, function(index, empleado) {
+                        html += "<tr>";
+                        html += "<td>" + empleado.apellido + "</td>";
+                        html += "<td>" + empleado.oficio + "</td>";
+                        html += "<td style='color:red'>" + empleado.salario + "</td>";
+                        html += "</tr>";
+                    });
+                    //AÑADIMOS LOS DATOS EN FORMATO PLANO (HTML) EN LA TABLA YA GENERADA
+                    $("#tabla tbody").html(html);
+                }
+            });
+        }
+
+        //AL CARGAR LA PAGINA...
+        $(document).ready(function() {
+            //RELLENAMOS EL SELECT
+            datosSelect();
+
+            //GENERAMOS EL BOTON PARA EL INCREMENTO DEL SALARIO
+            var btn = $("<button>", { "text": "Incrementar salarios" });
+            $("#divButton").append(btn);
+
+            //AL DARLE CLICK AL BOTON DEL INCREMENTO...
+            btn.click(function() {
+
+                //VALOR DEL SELECT (SELECT)
+                var oficio = select.val();
+
+                //VALOR DEL INCREMENTO (INPUT)
+                var incremento = parseInt($("#incremento").val());
+
+                //CREAMOS UN OBJETO PARA RE-ASIGNAR LOS VALORES
+                var empleado = new Object();
+                empleado.salario = incremento;
+
+                //TRANSFORMAMOS LOS DATOS A JSON PARA PODER ENVIARLOS AL SERVIDOR
+                var dataJson = JSON.stringify(empleado);
+
+                var request = "/api/Empleados/IncrementarSalarioOficios/" + oficio + "/" + incremento;
+
+                //CONSULTA A LA API PARA MODIFICAR LOS DATOS RECOGIDOS Y TRANSFORMADOS
+                $.ajax({
+                    "url" : url + request ,
+                    "type" : "PUT" ,
+                    "data" : dataJson ,
+                    "contentType" : "application/json" ,
+                    "success" : function(data) {
+                        console.log("Se ha incrementado " + incremento);
+
+                        //MOSTRAMOS LOS CAMBIOS
+                        mostrarDatos();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
